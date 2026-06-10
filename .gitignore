@@ -1,0 +1,19 @@
+# Visual Studio Code local settings and history
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local history plugin logs
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+# Visual Studio Code workspaces
+*.code-workspace
+
+# macOS Finder metadata files
+**/.DS_Store
