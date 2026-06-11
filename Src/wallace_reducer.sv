@@ -7,6 +7,8 @@ module wallace_reducer #(
 );
 
     generate
+        genvar i;
+        
         if (PP_COUNT == 1) begin : gen_width_one
             assign result = partial_products[0];
         end else if (PP_COUNT == 2) begin : gen_width_two
@@ -28,7 +30,7 @@ module wallace_reducer #(
             logic [RESULT_WIDTH-1:0] final_sum;
             logic [RESULT_WIDTH-1:0] final_carry;
 
-            for (genvar i = 0; i < PP_COUNT - 2; i++) begin : csa_gen
+            for (i = 0; i < PP_COUNT - 2; i++) begin : csa_gen
                 logic [RESULT_WIDTH:0] carry_temp;
 
                 if (i == 0) begin : csa_first

@@ -1,7 +1,6 @@
 module array_multiplier_top #(
 	parameter   int SRC1_WIDTH      = 32,
-	parameter   int SRC2_WIDTH      = SRC1_WIDTH,
-	localparam  int RESULT_WIDTH    = (SRC1_WIDTH + SRC2_WIDTH)
+	parameter   int SRC2_WIDTH      = SRC1_WIDTH
 ) (
 	input  logic                    clk,
 	input  logic                    rst_n,
@@ -10,6 +9,8 @@ module array_multiplier_top #(
 	input  logic                    is_signed,
 	output logic [RESULT_WIDTH-1:0] result
 );
+
+	localparam  int RESULT_WIDTH    = (SRC1_WIDTH + SRC2_WIDTH);
 
 	logic [SRC1_WIDTH-1:0]   srca_r;
 	logic [SRC2_WIDTH-1:0]   srcb_r;

@@ -1,14 +1,15 @@
 module booth_wallace_multiplier #(
     parameter   int SRC1_WIDTH      = 32,
-    parameter   int SRC2_WIDTH      = SRC1_WIDTH,
-    localparam  int RESULT_WIDTH    = (SRC1_WIDTH + SRC2_WIDTH),
-    localparam  int PP_COUNT        = ((SRC2_WIDTH / 2) + 1)
+    parameter   int SRC2_WIDTH      = SRC1_WIDTH
 ) (
     input  logic [SRC1_WIDTH-1:0]   srca,
     input  logic [SRC2_WIDTH-1:0]   srcb,
     input  logic                    is_signed,
     output logic [RESULT_WIDTH-1:0] result
 );
+
+    localparam  int RESULT_WIDTH    = (SRC1_WIDTH + SRC2_WIDTH);
+    localparam  int PP_COUNT        = ((SRC2_WIDTH / 2) + 1);
 
     logic [SRC1_WIDTH-1:0]   srca_pos;
     logic [SRC2_WIDTH-1:0]   srcb_pos;
