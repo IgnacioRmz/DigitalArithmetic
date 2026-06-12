@@ -1,14 +1,14 @@
 module booth_radix4_pp_gen #(
     parameter int SRC1_WIDTH    = 32,
-    parameter int SRC2_WIDTH    = SRC1_WIDTH
+    parameter int SRC2_WIDTH    = SRC1_WIDTH,
+    localparam int RESULT_WIDTH = (SRC1_WIDTH + SRC2_WIDTH),
+    localparam int PP_COUNT     = ((SRC2_WIDTH / 2) + 1)
+
 ) (
     input  logic [SRC1_WIDTH-1:0]   multiplicand,
     input  logic [SRC2_WIDTH-1:0]   multiplier,
     output logic [RESULT_WIDTH-1:0] partial_products [PP_COUNT-1:0]
 );
-
-    localparam int RESULT_WIDTH = (SRC1_WIDTH + SRC2_WIDTH);
-    localparam int PP_COUNT     = ((SRC2_WIDTH / 2) + 1);
 
     logic [RESULT_WIDTH:0] multiplicand_ext;
     logic [RESULT_WIDTH:0] a_pos;

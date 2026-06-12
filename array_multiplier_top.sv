@@ -1,6 +1,6 @@
 module array_multiplier_top #(
-	parameter   int SRC1_WIDTH      = 32,
-	parameter   int SRC2_WIDTH      = SRC1_WIDTH
+	parameter   int SRC1_WIDTH      = 45,
+	parameter   int SRC2_WIDTH      = 27
 ) (
 	input  logic                    clk,
 	input  logic                    rst_n,

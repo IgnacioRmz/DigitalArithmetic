@@ -37,7 +37,7 @@ module booth_radix4_pp_gen #(
         for (int i = 0; i < PP_COUNT; i++) begin
             logic [RESULT_WIDTH:0] shifted_row;
 
-            booth_bits = 3'(multiplier_pad[(2*i)+2 -: 3]);
+            booth_bits = multiplier_pad[(2*i)+2 -: 3];
 
             unique case (booth_bits)
                 3'b000, 3'b111: row_value = '0;
