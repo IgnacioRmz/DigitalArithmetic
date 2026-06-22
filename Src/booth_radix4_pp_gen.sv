@@ -1,41 +1,39 @@
 module booth_radix4_pp_gen #(
     parameter int SRC1_WIDTH    = 32,
-    parameter int SRC2_WIDTH    = SRC1_WIDTH
+    parameter int SRC2_WIDTH    = SRC1_WIDTH,
+    parameter int RESULT_WIDTH  = (SRC1_WIDTH + SRC2_WIDTH),
+    parameter int PP_COUNT      = ((SRC2_WIDTH / 2) + 1)
 ) (
     input  logic [SRC1_WIDTH-1:0]   multiplicand,
     input  logic [SRC2_WIDTH-1:0]   multiplier,
+    input  logic                    is_signed,
     output logic [RESULT_WIDTH-1:0] partial_products [PP_COUNT-1:0]
 );
 
-    localparam int RESULT_WIDTH = (SRC1_WIDTH + SRC2_WIDTH);
-    localparam int PP_COUNT     = ((SRC2_WIDTH / 2) + 1);
-
-    logic [RESULT_WIDTH:0] multiplicand_ext;
-    logic [RESULT_WIDTH:0] a_pos;
-    logic [RESULT_WIDTH:0] a_x2_pos;
-    logic [RESULT_WIDTH:0] a_neg;
-    logic [RESULT_WIDTH:0] a_x2_neg;
+    logic signed [RESULT_WIDTH:0] multiplicand_ext;
+    logic signed [RESULT_WIDTH:0] a_pos;
+    logic signed [RESULT_WIDTH:0] a_x2_pos;
+    logic signed [RESULT_WIDTH:0] a_neg;
+    logic signed [RESULT_WIDTH:0] a_x2_neg;
     logic [SRC2_WIDTH+2:0] multiplier_pad;
     logic [2:0]           booth_bits;
-    logic [RESULT_WIDTH:0] row_value;
-
-    twos_complement #(
-        .WIDTH(RESULT_WIDTH+1)
-    ) tc_a_neg (
-        .value(a_pos),
-        .convert(1'b1),
-        .result(a_neg)
-    );
+    logic signed [RESULT_WIDTH:0] row_value;
+    logic                         multiplicand_sign;
+    logic                         multiplier_sign;
 
     always_comb begin
-        multiplier_pad   = {2'b00, multiplier, 1'b0};
-        multiplicand_ext = {{(RESULT_WIDTH+1-SRC1_WIDTH){1'b0}}, multiplicand};
+        multiplicand_sign = is_signed ? multiplicand[SRC1_WIDTH-1] : 1'b0;
+        multiplier_sign   = is_signed ? multiplier[SRC2_WIDTH-1] : 1'b0;
+
+        multiplier_pad   = {multiplier_sign, multiplier_sign, multiplier, 1'b0};
+        multiplicand_ext = {{(RESULT_WIDTH+1-SRC1_WIDTH){multiplicand_sign}}, multiplicand};
         a_pos            = multiplicand_ext;
         a_x2_pos         = multiplicand_ext << 1;
+        a_neg            = -a_pos;
         a_x2_neg         = a_neg << 1;
 
         for (int i = 0; i < PP_COUNT; i++) begin
-            logic [RESULT_WIDTH:0] shifted_row;
+            logic signed [RESULT_WIDTH:0] shifted_row;
 
             booth_bits = 3'(multiplier_pad[(2*i)+2 -: 3]);
 

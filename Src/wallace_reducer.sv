@@ -3,32 +3,22 @@ module wallace_reducer #(
     parameter int PP_COUNT     = 16
 ) (
     input  logic [RESULT_WIDTH-1:0] partial_products [PP_COUNT-1:0],
-    output logic [RESULT_WIDTH-1:0] result
+    output logic [RESULT_WIDTH-1:0] sum_result,
+    output logic [RESULT_WIDTH-1:0] carry_result
 );
 
     generate
         genvar i;
         
         if (PP_COUNT == 1) begin : gen_width_one
-            assign result = partial_products[0];
+            assign sum_result   = partial_products[0];
+            assign carry_result = '0;
         end else if (PP_COUNT == 2) begin : gen_width_two
-            ripple_carry_adder #(
-                .WIDTH(RESULT_WIDTH)
-            ) final_add (
-                .srca(partial_products[0]),
-                .srcb(partial_products[1]),
-                .cin(1'b0),
-                .is_signed(1'b0),
-                .result(result),
-                .cout(),
-                .zero_f(),
-                .ov_f()
-            );
+            assign sum_result   = partial_products[0];
+            assign carry_result = partial_products[1];
         end else begin : gen_csa_chain
             logic [RESULT_WIDTH-1:0] csa_sum   [PP_COUNT-3:0];
             logic [RESULT_WIDTH-1:0] csa_carry [PP_COUNT-3:0];
-            logic [RESULT_WIDTH-1:0] final_sum;
-            logic [RESULT_WIDTH-1:0] final_carry;
 
             for (i = 0; i < PP_COUNT - 2; i++) begin : csa_gen
                 logic [RESULT_WIDTH:0] carry_temp;
@@ -58,21 +48,8 @@ module wallace_reducer #(
                 assign csa_carry[i] = carry_temp[RESULT_WIDTH-1:0];
             end
 
-            assign final_sum   = csa_sum[PP_COUNT-3];
-            assign final_carry = csa_carry[PP_COUNT-3];
-
-            ripple_carry_adder #(
-                .WIDTH(RESULT_WIDTH)
-            ) final_add (
-                .srca(final_sum),
-                .srcb(final_carry),
-                .cin(1'b0),
-                .is_signed(1'b0),
-                .result(result),
-                .cout(),
-                .zero_f(),
-                .ov_f()
-            );
+            assign sum_result   = csa_sum[PP_COUNT-3];
+            assign carry_result = csa_carry[PP_COUNT-3];
         end
     endgenerate
 
