@@ -143,14 +143,23 @@ module divider#(
 
         // Final correction: if the remainder is still at least one divisor,
         // increment quotient and reduce remainder once.
-        if ((abs_srcb != 64'd0) && (rem_abs >= abs_srcb) && (q_abs != 64'hFFFF_FFFF_FFFF_FFFF)) begin
+        if (rem_abs >= abs_srcb) begin
             q_abs_corr = q_abs + 64'd1;
             rem_abs_corr = rem_abs - abs_srcb;
         end
     end
 
-    assign result_signed = quotient_neg ? (~q_abs_corr + 64'd1) : q_abs_corr;
-    assign rem_signed = srca_neg ? (~rem_abs_corr + 64'd1) : rem_abs_corr;
+    twos_complement #(.WIDTH(64)) tc_result (
+        .value(q_abs_corr),
+        .convert(quotient_neg),
+        .result(result_signed)
+    );
+
+    twos_complement #(.WIDTH(64)) tc_rem (
+        .value(rem_abs_corr),
+        .convert(srca_neg),
+        .result(rem_signed)
+    );
 
     always_comb begin
         div_zero_f = (srcb == 64'd0);

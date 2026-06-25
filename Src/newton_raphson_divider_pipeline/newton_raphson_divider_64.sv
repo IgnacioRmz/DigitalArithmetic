@@ -54,55 +54,46 @@ module divider#(
     logic [63:0]  abs_srca_s2;
     logic [63:0]  abs_srca_s3;
     logic [63:0]  abs_srca_s4;
-    logic [63:0]  abs_srca_s5;
     logic [63:0]  abs_srcb_s1;
     logic [63:0]  abs_srcb_s2;
     logic [63:0]  abs_srcb_s3;
     logic [63:0]  abs_srcb_s4;
-    logic [63:0]  abs_srcb_s5;
     logic [63:0]  srca_s1;
     logic [63:0]  srca_s2;
     logic [63:0]  srca_s3;
     logic [63:0]  srca_s4;
-    logic [63:0]  srca_s5;
     logic [63:0]  shifted_abs_srcb_s1;
     logic [63:0]  shifted_abs_srcb_s2;
     logic [63:0]  shifted_abs_srcb_s3;
     logic [63:0]  shifted_abs_srcb_s4;
-    logic [63:0]  shifted_abs_srcb_s5;
     logic [5:0]   shift_amount_s1;
     logic [5:0]   shift_amount_s2;
     logic [5:0]   shift_amount_s3;
     logic [5:0]   shift_amount_s4;
-    logic [5:0]   shift_amount_s5;
     logic         srca_neg_s1;
     logic         srca_neg_s2;
     logic         srca_neg_s3;
     logic         srca_neg_s4;
-    logic         srca_neg_s5;
     logic         srcb_neg_s1;
     logic         srcb_neg_s2;
     logic         srcb_neg_s3;
     logic         srcb_neg_s4;
-    logic         srcb_neg_s5;
     logic         quotient_neg_s1;
     logic         quotient_neg_s2;
     logic         quotient_neg_s3;
     logic         quotient_neg_s4;
-    logic         quotient_neg_s5;
     logic         div_zero_s1;
     logic         div_zero_s2;
     logic         div_zero_s3;
     logic         div_zero_s4;
-    logic         div_zero_s5;
 
-    logic [63:0]  q_abs_s6;
-    logic [63:0]  abs_srca_s6;
-    logic [63:0]  abs_srcb_s6;
-    logic         quotient_neg_s6;
-    logic         srca_neg_s6;
-    logic         div_zero_s6;
-    logic [63:0]  srca_s6;
+    logic [63:0]  q_abs_s5;
+    logic [63:0]  abs_srca_s5;
+    logic [63:0]  abs_srcb_s5;
+    logic         quotient_neg_s5;
+    logic         srca_neg_s5;
+    logic         div_zero_s5;
+    logic [63:0]  srca_s5;
 
     // S0 pipeline register (cuts abs+lzc+shift+lut combinational path)
     logic [63:0]  abs_srca_s0;
@@ -224,55 +215,46 @@ module divider#(
             abs_srca_s2 <= '0;
             abs_srca_s3 <= '0;
             abs_srca_s4 <= '0;
-            abs_srca_s5 <= '0;
 
             abs_srcb_s1 <= '0;
             abs_srcb_s2 <= '0;
             abs_srcb_s3 <= '0;
             abs_srcb_s4 <= '0;
-            abs_srcb_s5 <= '0;
 
             srca_s1 <= '0;
             srca_s2 <= '0;
             srca_s3 <= '0;
             srca_s4 <= '0;
-            srca_s5 <= '0;
 
             shifted_abs_srcb_s1 <= '0;
             shifted_abs_srcb_s2 <= '0;
             shifted_abs_srcb_s3 <= '0;
             shifted_abs_srcb_s4 <= '0;
-            shifted_abs_srcb_s5 <= '0;
 
             shift_amount_s1 <= '0;
             shift_amount_s2 <= '0;
             shift_amount_s3 <= '0;
             shift_amount_s4 <= '0;
-            shift_amount_s5 <= '0;
 
             srca_neg_s1 <= '0;
             srca_neg_s2 <= '0;
             srca_neg_s3 <= '0;
             srca_neg_s4 <= '0;
-            srca_neg_s5 <= '0;
 
             srcb_neg_s1 <= '0;
             srcb_neg_s2 <= '0;
             srcb_neg_s3 <= '0;
             srcb_neg_s4 <= '0;
-            srcb_neg_s5 <= '0;
 
             quotient_neg_s1 <= '0;
             quotient_neg_s2 <= '0;
             quotient_neg_s3 <= '0;
             quotient_neg_s4 <= '0;
-            quotient_neg_s5 <= '0;
 
             div_zero_s1 <= '0;
             div_zero_s2 <= '0;
             div_zero_s3 <= '0;
             div_zero_s4 <= '0;
-            div_zero_s5 <= '0;
         end else begin
             x1_out <= x1_next;
             x2_out <= x2_next;
@@ -283,55 +265,46 @@ module divider#(
             abs_srca_s2 <= abs_srca_s1;
             abs_srca_s3 <= abs_srca_s2;
             abs_srca_s4 <= abs_srca_s3;
-            abs_srca_s5 <= abs_srca_s4;
 
             abs_srcb_s1 <= abs_srcb_s0;
             abs_srcb_s2 <= abs_srcb_s1;
             abs_srcb_s3 <= abs_srcb_s2;
             abs_srcb_s4 <= abs_srcb_s3;
-            abs_srcb_s5 <= abs_srcb_s4;
 
             srca_s1 <= srca_s0;
             srca_s2 <= srca_s1;
             srca_s3 <= srca_s2;
             srca_s4 <= srca_s3;
-            srca_s5 <= srca_s4;
 
             shifted_abs_srcb_s1 <= shifted_abs_srcb_s0;
             shifted_abs_srcb_s2 <= shifted_abs_srcb_s1;
             shifted_abs_srcb_s3 <= shifted_abs_srcb_s2;
             shifted_abs_srcb_s4 <= shifted_abs_srcb_s3;
-            shifted_abs_srcb_s5 <= shifted_abs_srcb_s4;
 
             shift_amount_s1 <= shift_amount_s0;
             shift_amount_s2 <= shift_amount_s1;
             shift_amount_s3 <= shift_amount_s2;
             shift_amount_s4 <= shift_amount_s3;
-            shift_amount_s5 <= shift_amount_s4;
 
             srca_neg_s1 <= srca_neg_s0;
             srca_neg_s2 <= srca_neg_s1;
             srca_neg_s3 <= srca_neg_s2;
             srca_neg_s4 <= srca_neg_s3;
-            srca_neg_s5 <= srca_neg_s4;
 
             srcb_neg_s1 <= srcb_neg_s0;
             srcb_neg_s2 <= srcb_neg_s1;
             srcb_neg_s3 <= srcb_neg_s2;
             srcb_neg_s4 <= srcb_neg_s3;
-            srcb_neg_s5 <= srcb_neg_s4;
 
             quotient_neg_s1 <= quotient_neg_s0;
             quotient_neg_s2 <= quotient_neg_s1;
             quotient_neg_s3 <= quotient_neg_s2;
             quotient_neg_s4 <= quotient_neg_s3;
-            quotient_neg_s5 <= quotient_neg_s4;
 
             div_zero_s1 <= div_zero_s0;
             div_zero_s2 <= div_zero_s1;
             div_zero_s3 <= div_zero_s2;
             div_zero_s4 <= div_zero_s3;
-            div_zero_s5 <= div_zero_s4;
         end
     end
 
@@ -364,61 +337,61 @@ module divider#(
 
     assign q_abs = one_over_b;
 
-    // Stage 6 pipeline register: cuts the two-multiplier critical path
-    // (abs_srca_s5 -> mult_quotient -> q_abs -> rem multiply -> result)
+    // Stage 5 pipeline register: cuts the two-multiplier critical path
+    // (abs_srca_s4 -> mult_quotient -> q_abs -> rem multiply -> result)
     always_ff @(posedge clk) begin
         if (rst) begin
-            q_abs_s6        <= '0;
-            abs_srca_s6     <= '0;
-            abs_srcb_s6     <= '0;
-            quotient_neg_s6 <= '0;
-            srca_neg_s6     <= '0;
-            div_zero_s6     <= '0;
-            srca_s6         <= '0;
+            q_abs_s5        <= '0;
+            abs_srca_s5     <= '0;
+            abs_srcb_s5     <= '0;
+            quotient_neg_s5 <= '0;
+            srca_neg_s5     <= '0;
+            div_zero_s5     <= '0;
+            srca_s5         <= '0;
         end else begin
-            q_abs_s6        <= q_abs;
-            abs_srca_s6     <= abs_srca_s4;
-            abs_srcb_s6     <= abs_srcb_s4;
-            quotient_neg_s6 <= quotient_neg_s4;
-            srca_neg_s6     <= srca_neg_s4;
-            div_zero_s6     <= div_zero_s4;
-            srca_s6         <= srca_s4;
+            q_abs_s5        <= q_abs;
+            abs_srca_s5     <= abs_srca_s4;
+            abs_srcb_s5     <= abs_srcb_s4;
+            quotient_neg_s5 <= quotient_neg_s4;
+            srca_neg_s5     <= srca_neg_s4;
+            div_zero_s5     <= div_zero_s4;
+            srca_s5         <= srca_s4;
         end
     end
 
-    assign rem_abs = abs_srca_s6 - (q_abs_s6 * abs_srcb_s6);
+    assign rem_abs = abs_srca_s5 - (q_abs_s5 * abs_srcb_s5);
 
 
     always_comb begin
-        q_abs_corr = q_abs_s6;
+        q_abs_corr = q_abs_s5;
         rem_abs_corr = rem_abs;
 
         // Final correction: if the remainder is still at least one divisor,
         // increment quotient and reduce remainder once.
-        if (rem_abs >= abs_srcb_s6) begin
-            q_abs_corr = q_abs_s6 + 64'd1;
-            rem_abs_corr = rem_abs - abs_srcb_s6;
+        if (rem_abs >= abs_srcb_s5) begin
+            q_abs_corr = q_abs_s5 + 64'd1;
+            rem_abs_corr = rem_abs - abs_srcb_s5;
         end
     end
 
     twos_complement #(.WIDTH(64)) tc_result (
         .value(q_abs_corr),
-        .convert(quotient_neg_s6),
+        .convert(quotient_neg_s5),
         .result(result_signed)
     );
 
     twos_complement #(.WIDTH(64)) tc_rem (
         .value(rem_abs_corr),
-        .convert(srca_neg_s6),
+        .convert(srca_neg_s5),
         .result(rem_signed)
     );
 
     always_comb begin
-        div_zero_f = div_zero_s6;
+        div_zero_f = div_zero_s5;
 
         if (div_zero_f) begin
             result = 64'hFFFF_FFFF_FFFF_FFFF;
-            rem = srca_s6;
+            rem = srca_s5;
         end else begin
             result = result_signed;
             rem = rem_signed;
