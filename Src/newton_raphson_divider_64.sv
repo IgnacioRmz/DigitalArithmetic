@@ -24,8 +24,10 @@ module divider#(
     logic [63:0] x5_out;
     logic [63:0] x6_out;
     logic [63:0] one_over_b;
+    logic [127:0] one_over_b_wide;
+    logic [6:0]  denorm_shift_amount;
 
-    logic [127:0] quotient_product;
+    logic [127:0] res_mult;
     logic [63:0]  q_est;
     logic [63:0]  q_abs;
     logic [63:0]  q_abs_corr;
@@ -116,32 +118,33 @@ module divider#(
         .Xn(x5_out)
     );
 
-    newton_raphson_module newton_raphson_iter6 (
-        .Xo(x5_out),
-        .D(shifted_abs_srcb),
-        .Xn(x6_out)
-    );
-
-    shifter #(
-        .WIDTH(64)
-    ) shifter_denorm_recip (
-        .in(x6_out),
-        .shift_amount(shift_amount),
-        .direction(1'b1),
-        .out(one_over_b)
-    );
+    // Five-iteration mode: keep x6 debug tap available.
+    assign x6_out = x5_out;
 
     booth_wallace_multiplier #(
         .SRC1_WIDTH(64),
         .SRC2_WIDTH(64)
     ) mult_quotient (
         .srca(abs_srca),
-        .srcb(one_over_b),
+        .srcb(x5_out),
         .is_signed(1'b0),
-        .result(quotient_product)
+        .result(res_mult)
     );
 
-    assign q_abs = quotient_product[127:64];
+    assign denorm_shift_amount = 7'd126 - {1'b0, shift_amount};
+
+    shifter #(
+        .WIDTH(128)
+    ) shifter_denorm_recip (
+        .in(res_mult),
+        .shift_amount(denorm_shift_amount),
+        .direction(1'b1),
+        .out(one_over_b_wide)
+    );
+
+    assign one_over_b = one_over_b_wide[63:0];
+
+    assign q_abs = one_over_b;
     assign rem_abs = abs_srca - (q_abs * abs_srcb);
 
 
