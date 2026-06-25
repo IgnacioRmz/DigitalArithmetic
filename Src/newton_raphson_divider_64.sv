@@ -100,6 +100,14 @@ module divider#(
     logic         div_zero_s4;
     logic         div_zero_s5;
 
+    logic [63:0]  q_abs_s6;
+    logic [63:0]  abs_srca_s6;
+    logic [63:0]  abs_srcb_s6;
+    logic         quotient_neg_s6;
+    logic         srca_neg_s6;
+    logic         div_zero_s6;
+    logic [63:0]  srca_s6;
+
     assign shift_amount = lzc_out[5:0];
     assign x0_seed = {x0_lut, 59'd0};
 
@@ -329,39 +337,62 @@ module divider#(
     assign one_over_b = one_over_b_wide[63:0];
 
     assign q_abs = one_over_b;
-    assign rem_abs = abs_srca_s5 - (q_abs * abs_srcb_s5);
+
+    // Stage 6 pipeline register: cuts the two-multiplier critical path
+    // (abs_srca_s5 -> mult_quotient -> q_abs -> rem multiply -> result)
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            q_abs_s6        <= '0;
+            abs_srca_s6     <= '0;
+            abs_srcb_s6     <= '0;
+            quotient_neg_s6 <= '0;
+            srca_neg_s6     <= '0;
+            div_zero_s6     <= '0;
+            srca_s6         <= '0;
+        end else begin
+            q_abs_s6        <= q_abs;
+            abs_srca_s6     <= abs_srca_s5;
+            abs_srcb_s6     <= abs_srcb_s5;
+            quotient_neg_s6 <= quotient_neg_s5;
+            srca_neg_s6     <= srca_neg_s5;
+            div_zero_s6     <= div_zero_s5;
+            srca_s6         <= srca_s5;
+        end
+    end
+
+    assign rem_abs = abs_srca_s6 - (q_abs_s6 * abs_srcb_s6);
 
 
     always_comb begin
-        q_abs_corr = q_abs;
+        q_abs_corr = q_abs_s6;
         rem_abs_corr = rem_abs;
 
         // Final correction: if the remainder is still at least one divisor,
         // increment quotient and reduce remainder once.
-        if (rem_abs >= abs_srcb_s5) begin
-            q_abs_corr = q_abs + 64'd1;
-            rem_abs_corr = rem_abs - abs_srcb_s5;
+        if (rem_abs >= abs_srcb_s6) begin
+            q_abs_corr = q_abs_s6 + 64'd1;
+            rem_abs_corr = rem_abs - abs_srcb_s6;
         end
     end
 
     twos_complement #(.WIDTH(64)) tc_result (
         .value(q_abs_corr),
-        .convert(quotient_neg_s5),
+        .convert(quotient_neg_s6),
         .result(result_signed)
     );
 
     twos_complement #(.WIDTH(64)) tc_rem (
         .value(rem_abs_corr),
-        .convert(srca_neg_s5),
+        .convert(srca_neg_s6),
         .result(rem_signed)
     );
 
     always_comb begin
-        div_zero_f = div_zero_s5;
+        div_zero_f = div_zero_s6;
 
         if (div_zero_f) begin
             result = 64'hFFFF_FFFF_FFFF_FFFF;
-            rem = srca_s5;
+            rem = srca_s6;
         end else begin
             result = result_signed;
             rem = rem_signed;
