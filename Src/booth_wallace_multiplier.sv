@@ -33,7 +33,7 @@ module booth_wallace_multiplier #(
         .carry_result(wallace_carry)
     );
 
-    ripple_carry_adder #(
+    kogge_stone_adder #(
         .WIDTH(RESULT_WIDTH)
     ) final_add (
         .srca(wallace_sum),
