@@ -1,6 +1,8 @@
 module divider#(
-  parameter int WIDTH = 64
+  parameter int WIDTH = 64 //Just for compatibility with the testbench
 ) (
+    input  logic        clk,
+    input  logic        rst,
     input  logic [63:0] srca,
     input  logic [63:0] srcb,
     input  logic        is_signed,
@@ -17,6 +19,11 @@ module divider#(
 
     logic [4:0]  x0_lut;
     logic [63:0] x0_seed;
+    logic [63:0] x1_next;
+    logic [63:0] x2_next;
+    logic [63:0] x3_next;
+    logic [63:0] x4_next;
+    logic [63:0] x5_next;
     logic [63:0] x1_out;
     logic [63:0] x2_out;
     logic [63:0] x3_out;
@@ -41,15 +48,68 @@ module divider#(
     logic         srca_neg;
     logic         srcb_neg;
     logic         quotient_neg;
+    logic         srca_neg_s0;
+    logic         srcb_neg_s0;
+    logic         quotient_neg_s0;
     logic [63:0]  result_signed;
     logic [63:0]  rem_signed;
+
+    logic [63:0]  abs_srca_s1;
+    logic [63:0]  abs_srca_s2;
+    logic [63:0]  abs_srca_s3;
+    logic [63:0]  abs_srca_s4;
+    logic [63:0]  abs_srca_s5;
+    logic [63:0]  abs_srcb_s1;
+    logic [63:0]  abs_srcb_s2;
+    logic [63:0]  abs_srcb_s3;
+    logic [63:0]  abs_srcb_s4;
+    logic [63:0]  abs_srcb_s5;
+    logic [63:0]  srca_s1;
+    logic [63:0]  srca_s2;
+    logic [63:0]  srca_s3;
+    logic [63:0]  srca_s4;
+    logic [63:0]  srca_s5;
+    logic [63:0]  shifted_abs_srcb_s1;
+    logic [63:0]  shifted_abs_srcb_s2;
+    logic [63:0]  shifted_abs_srcb_s3;
+    logic [63:0]  shifted_abs_srcb_s4;
+    logic [63:0]  shifted_abs_srcb_s5;
+    logic [5:0]   shift_amount_s1;
+    logic [5:0]   shift_amount_s2;
+    logic [5:0]   shift_amount_s3;
+    logic [5:0]   shift_amount_s4;
+    logic [5:0]   shift_amount_s5;
+    logic         srca_neg_s1;
+    logic         srca_neg_s2;
+    logic         srca_neg_s3;
+    logic         srca_neg_s4;
+    logic         srca_neg_s5;
+    logic         srcb_neg_s1;
+    logic         srcb_neg_s2;
+    logic         srcb_neg_s3;
+    logic         srcb_neg_s4;
+    logic         srcb_neg_s5;
+    logic         quotient_neg_s1;
+    logic         quotient_neg_s2;
+    logic         quotient_neg_s3;
+    logic         quotient_neg_s4;
+    logic         quotient_neg_s5;
+    logic         div_zero_s1;
+    logic         div_zero_s2;
+    logic         div_zero_s3;
+    logic         div_zero_s4;
+    logic         div_zero_s5;
 
     assign shift_amount = lzc_out[5:0];
     assign x0_seed = {x0_lut, 59'd0};
 
-    assign srca_neg = is_signed & srca[63];
-    assign srcb_neg = is_signed & srcb[63];
-    assign quotient_neg = srca_neg ^ srcb_neg;
+    assign srca_neg_s0 = is_signed & srca[63];
+    assign srcb_neg_s0 = is_signed & srcb[63];
+    assign quotient_neg_s0 = srca_neg_s0 ^ srcb_neg_s0;
+
+    assign srca_neg = srca_neg_s5;
+    assign srcb_neg = srcb_neg_s5;
+    assign quotient_neg = quotient_neg_s5;
 
     assign abs_srca_ext = {64'd0, abs_srca};
 
@@ -91,32 +151,156 @@ module divider#(
     newton_raphson_module newton_raphson_iter1 (
         .Xo(x0_seed),
         .D(shifted_abs_srcb),
-        .Xn(x1_out)
+        .Xn(x1_next)
     );
 
     newton_raphson_module newton_raphson_iter2 (
         .Xo(x1_out),
-        .D(shifted_abs_srcb),
-        .Xn(x2_out)
+        .D(shifted_abs_srcb_s1),
+        .Xn(x2_next)
     );
 
     newton_raphson_module newton_raphson_iter3 (
         .Xo(x2_out),
-        .D(shifted_abs_srcb),
-        .Xn(x3_out)
+        .D(shifted_abs_srcb_s2),
+        .Xn(x3_next)
     );
 
     newton_raphson_module newton_raphson_iter4 (
         .Xo(x3_out),
-        .D(shifted_abs_srcb),
-        .Xn(x4_out)
+        .D(shifted_abs_srcb_s3),
+        .Xn(x4_next)
     );
 
     newton_raphson_module newton_raphson_iter5 (
         .Xo(x4_out),
-        .D(shifted_abs_srcb),
-        .Xn(x5_out)
+        .D(shifted_abs_srcb_s4),
+        .Xn(x5_next)
     );
+
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            x1_out <= '0;
+            x2_out <= '0;
+            x3_out <= '0;
+            x4_out <= '0;
+            x5_out <= '0;
+
+            abs_srca_s1 <= '0;
+            abs_srca_s2 <= '0;
+            abs_srca_s3 <= '0;
+            abs_srca_s4 <= '0;
+            abs_srca_s5 <= '0;
+
+            abs_srcb_s1 <= '0;
+            abs_srcb_s2 <= '0;
+            abs_srcb_s3 <= '0;
+            abs_srcb_s4 <= '0;
+            abs_srcb_s5 <= '0;
+
+            srca_s1 <= '0;
+            srca_s2 <= '0;
+            srca_s3 <= '0;
+            srca_s4 <= '0;
+            srca_s5 <= '0;
+
+            shifted_abs_srcb_s1 <= '0;
+            shifted_abs_srcb_s2 <= '0;
+            shifted_abs_srcb_s3 <= '0;
+            shifted_abs_srcb_s4 <= '0;
+            shifted_abs_srcb_s5 <= '0;
+
+            shift_amount_s1 <= '0;
+            shift_amount_s2 <= '0;
+            shift_amount_s3 <= '0;
+            shift_amount_s4 <= '0;
+            shift_amount_s5 <= '0;
+
+            srca_neg_s1 <= '0;
+            srca_neg_s2 <= '0;
+            srca_neg_s3 <= '0;
+            srca_neg_s4 <= '0;
+            srca_neg_s5 <= '0;
+
+            srcb_neg_s1 <= '0;
+            srcb_neg_s2 <= '0;
+            srcb_neg_s3 <= '0;
+            srcb_neg_s4 <= '0;
+            srcb_neg_s5 <= '0;
+
+            quotient_neg_s1 <= '0;
+            quotient_neg_s2 <= '0;
+            quotient_neg_s3 <= '0;
+            quotient_neg_s4 <= '0;
+            quotient_neg_s5 <= '0;
+
+            div_zero_s1 <= '0;
+            div_zero_s2 <= '0;
+            div_zero_s3 <= '0;
+            div_zero_s4 <= '0;
+            div_zero_s5 <= '0;
+        end else begin
+            x1_out <= x1_next;
+            x2_out <= x2_next;
+            x3_out <= x3_next;
+            x4_out <= x4_next;
+            x5_out <= x5_next;
+
+            abs_srca_s1 <= abs_srca;
+            abs_srca_s2 <= abs_srca_s1;
+            abs_srca_s3 <= abs_srca_s2;
+            abs_srca_s4 <= abs_srca_s3;
+            abs_srca_s5 <= abs_srca_s4;
+
+            abs_srcb_s1 <= abs_srcb;
+            abs_srcb_s2 <= abs_srcb_s1;
+            abs_srcb_s3 <= abs_srcb_s2;
+            abs_srcb_s4 <= abs_srcb_s3;
+            abs_srcb_s5 <= abs_srcb_s4;
+
+            srca_s1 <= srca;
+            srca_s2 <= srca_s1;
+            srca_s3 <= srca_s2;
+            srca_s4 <= srca_s3;
+            srca_s5 <= srca_s4;
+
+            shifted_abs_srcb_s1 <= shifted_abs_srcb;
+            shifted_abs_srcb_s2 <= shifted_abs_srcb_s1;
+            shifted_abs_srcb_s3 <= shifted_abs_srcb_s2;
+            shifted_abs_srcb_s4 <= shifted_abs_srcb_s3;
+            shifted_abs_srcb_s5 <= shifted_abs_srcb_s4;
+
+            shift_amount_s1 <= shift_amount;
+            shift_amount_s2 <= shift_amount_s1;
+            shift_amount_s3 <= shift_amount_s2;
+            shift_amount_s4 <= shift_amount_s3;
+            shift_amount_s5 <= shift_amount_s4;
+
+            srca_neg_s1 <= srca_neg_s0;
+            srca_neg_s2 <= srca_neg_s1;
+            srca_neg_s3 <= srca_neg_s2;
+            srca_neg_s4 <= srca_neg_s3;
+            srca_neg_s5 <= srca_neg_s4;
+
+            srcb_neg_s1 <= srcb_neg_s0;
+            srcb_neg_s2 <= srcb_neg_s1;
+            srcb_neg_s3 <= srcb_neg_s2;
+            srcb_neg_s4 <= srcb_neg_s3;
+            srcb_neg_s5 <= srcb_neg_s4;
+
+            quotient_neg_s1 <= quotient_neg_s0;
+            quotient_neg_s2 <= quotient_neg_s1;
+            quotient_neg_s3 <= quotient_neg_s2;
+            quotient_neg_s4 <= quotient_neg_s3;
+            quotient_neg_s5 <= quotient_neg_s4;
+
+            div_zero_s1 <= (srcb == 64'd0);
+            div_zero_s2 <= div_zero_s1;
+            div_zero_s3 <= div_zero_s2;
+            div_zero_s4 <= div_zero_s3;
+            div_zero_s5 <= div_zero_s4;
+        end
+    end
 
     // Five-iteration mode: keep x6 debug tap available.
     assign x6_out = x5_out;
@@ -125,13 +309,13 @@ module divider#(
         .SRC1_WIDTH(64),
         .SRC2_WIDTH(64)
     ) mult_quotient (
-        .srca(abs_srca),
+        .srca(abs_srca_s5),
         .srcb(x5_out),
         .is_signed(1'b0),
         .result(res_mult)
     );
 
-    assign denorm_shift_amount = 7'd126 - {1'b0, shift_amount};
+    assign denorm_shift_amount = 7'd126 - {1'b0, shift_amount_s5};
 
     shifter #(
         .WIDTH(128)
@@ -145,7 +329,7 @@ module divider#(
     assign one_over_b = one_over_b_wide[63:0];
 
     assign q_abs = one_over_b;
-    assign rem_abs = abs_srca - (q_abs * abs_srcb);
+    assign rem_abs = abs_srca_s5 - (q_abs * abs_srcb_s5);
 
 
     always_comb begin
@@ -154,21 +338,30 @@ module divider#(
 
         // Final correction: if the remainder is still at least one divisor,
         // increment quotient and reduce remainder once.
-        if ((abs_srcb != 64'd0) && (rem_abs >= abs_srcb) && (q_abs != 64'hFFFF_FFFF_FFFF_FFFF)) begin
+        if (rem_abs >= abs_srcb_s5) begin
             q_abs_corr = q_abs + 64'd1;
-            rem_abs_corr = rem_abs - abs_srcb;
+            rem_abs_corr = rem_abs - abs_srcb_s5;
         end
     end
 
-    assign result_signed = quotient_neg ? (~q_abs_corr + 64'd1) : q_abs_corr;
-    assign rem_signed = srca_neg ? (~rem_abs_corr + 64'd1) : rem_abs_corr;
+    twos_complement #(.WIDTH(64)) tc_result (
+        .value(q_abs_corr),
+        .convert(quotient_neg_s5),
+        .result(result_signed)
+    );
+
+    twos_complement #(.WIDTH(64)) tc_rem (
+        .value(rem_abs_corr),
+        .convert(srca_neg_s5),
+        .result(rem_signed)
+    );
 
     always_comb begin
-        div_zero_f = (srcb == 64'd0);
+        div_zero_f = div_zero_s5;
 
         if (div_zero_f) begin
             result = 64'hFFFF_FFFF_FFFF_FFFF;
-            rem = srca;
+            rem = srca_s5;
         end else begin
             result = result_signed;
             rem = rem_signed;
