@@ -23,7 +23,6 @@ module divider#(
     logic [63:0] x2_next;
     logic [63:0] x3_next;
     logic [63:0] x4_next;
-    logic [63:0] x5_next;
     logic [63:0] x1_out;
     logic [63:0] x2_out;
     logic [63:0] x3_out;
@@ -48,9 +47,6 @@ module divider#(
     logic         srca_neg;
     logic         srcb_neg;
     logic         quotient_neg;
-    logic         srca_neg_s0;
-    logic         srcb_neg_s0;
-    logic         quotient_neg_s0;
     logic [63:0]  result_signed;
     logic [63:0]  rem_signed;
 
@@ -108,16 +104,25 @@ module divider#(
     logic         div_zero_s6;
     logic [63:0]  srca_s6;
 
+    // S0 pipeline register (cuts abs+lzc+shift+lut combinational path)
+    logic [63:0]  abs_srca_s0;
+    logic [63:0]  abs_srcb_s0;
+    logic [63:0]  srca_s0;
+    logic [63:0]  shifted_abs_srcb_s0;
+    logic [5:0]   shift_amount_s0;
+    logic [63:0]  x0_seed_s0;
+    logic         srca_neg_s0;
+    logic         srcb_neg_s0;
+    logic         quotient_neg_s0;
+    logic         div_zero_s0;
+
     assign shift_amount = lzc_out[5:0];
     assign x0_seed = {x0_lut, 59'd0};
 
-    assign srca_neg_s0 = is_signed & srca[63];
-    assign srcb_neg_s0 = is_signed & srcb[63];
-    assign quotient_neg_s0 = srca_neg_s0 ^ srcb_neg_s0;
 
-    assign srca_neg = srca_neg_s5;
-    assign srcb_neg = srcb_neg_s5;
-    assign quotient_neg = quotient_neg_s5;
+    assign srca_neg = srca_neg_s4;
+    assign srcb_neg = srcb_neg_s4;
+    assign quotient_neg = quotient_neg_s4;
 
     assign abs_srca_ext = {64'd0, abs_srca};
 
@@ -157,8 +162,8 @@ module divider#(
     );
 
     newton_raphson_module newton_raphson_iter1 (
-        .Xo(x0_seed),
-        .D(shifted_abs_srcb),
+        .Xo(x0_seed_s0),
+        .D(shifted_abs_srcb_s0),
         .Xn(x1_next)
     );
 
@@ -180,19 +185,40 @@ module divider#(
         .Xn(x4_next)
     );
 
-    newton_raphson_module newton_raphson_iter5 (
-        .Xo(x4_out),
-        .D(shifted_abs_srcb_s4),
-        .Xn(x5_next)
-    );
+    // S0: Front-end register stage
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            abs_srca_s0       <= '0;
+            abs_srcb_s0       <= '0;
+            srca_s0           <= '0;
+            shifted_abs_srcb_s0 <= '0;
+            shift_amount_s0   <= '0;
+            x0_seed_s0        <= '0;
+            srca_neg_s0       <= '0;
+            srcb_neg_s0       <= '0;
+            quotient_neg_s0   <= '0;
+            div_zero_s0       <= '0;
+        end else begin
+            abs_srca_s0       <= abs_srca;
+            abs_srcb_s0       <= abs_srcb;
+            srca_s0           <= srca;
+            shifted_abs_srcb_s0 <= shifted_abs_srcb;
+            shift_amount_s0   <= shift_amount;
+            x0_seed_s0        <= x0_seed;
+            srca_neg_s0       <= is_signed & srca[63];
+            srcb_neg_s0       <= is_signed & srcb[63];
+            quotient_neg_s0   <= (is_signed & srca[63]) ^ (is_signed & srcb[63]);
+            div_zero_s0       <= (srcb == 64'd0);
+        end
+    end
 
+    // NR iteration pipeline registers
     always_ff @(posedge clk) begin
         if (rst) begin
             x1_out <= '0;
             x2_out <= '0;
             x3_out <= '0;
             x4_out <= '0;
-            x5_out <= '0;
 
             abs_srca_s1 <= '0;
             abs_srca_s2 <= '0;
@@ -252,33 +278,32 @@ module divider#(
             x2_out <= x2_next;
             x3_out <= x3_next;
             x4_out <= x4_next;
-            x5_out <= x5_next;
 
-            abs_srca_s1 <= abs_srca;
+            abs_srca_s1 <= abs_srca_s0;
             abs_srca_s2 <= abs_srca_s1;
             abs_srca_s3 <= abs_srca_s2;
             abs_srca_s4 <= abs_srca_s3;
             abs_srca_s5 <= abs_srca_s4;
 
-            abs_srcb_s1 <= abs_srcb;
+            abs_srcb_s1 <= abs_srcb_s0;
             abs_srcb_s2 <= abs_srcb_s1;
             abs_srcb_s3 <= abs_srcb_s2;
             abs_srcb_s4 <= abs_srcb_s3;
             abs_srcb_s5 <= abs_srcb_s4;
 
-            srca_s1 <= srca;
+            srca_s1 <= srca_s0;
             srca_s2 <= srca_s1;
             srca_s3 <= srca_s2;
             srca_s4 <= srca_s3;
             srca_s5 <= srca_s4;
 
-            shifted_abs_srcb_s1 <= shifted_abs_srcb;
+            shifted_abs_srcb_s1 <= shifted_abs_srcb_s0;
             shifted_abs_srcb_s2 <= shifted_abs_srcb_s1;
             shifted_abs_srcb_s3 <= shifted_abs_srcb_s2;
             shifted_abs_srcb_s4 <= shifted_abs_srcb_s3;
             shifted_abs_srcb_s5 <= shifted_abs_srcb_s4;
 
-            shift_amount_s1 <= shift_amount;
+            shift_amount_s1 <= shift_amount_s0;
             shift_amount_s2 <= shift_amount_s1;
             shift_amount_s3 <= shift_amount_s2;
             shift_amount_s4 <= shift_amount_s3;
@@ -302,7 +327,7 @@ module divider#(
             quotient_neg_s4 <= quotient_neg_s3;
             quotient_neg_s5 <= quotient_neg_s4;
 
-            div_zero_s1 <= (srcb == 64'd0);
+            div_zero_s1 <= div_zero_s0;
             div_zero_s2 <= div_zero_s1;
             div_zero_s3 <= div_zero_s2;
             div_zero_s4 <= div_zero_s3;
@@ -310,20 +335,21 @@ module divider#(
         end
     end
 
-    // Five-iteration mode: keep x6 debug tap available.
-    assign x6_out = x5_out;
+    // Four-iteration mode: keep debug taps available.
+    assign x5_out = x4_out;
+    assign x6_out = x4_out;
 
     booth_wallace_multiplier #(
         .SRC1_WIDTH(64),
         .SRC2_WIDTH(64)
     ) mult_quotient (
-        .srca(abs_srca_s5),
-        .srcb(x5_out),
+        .srca(abs_srca_s4),
+        .srcb(x4_out),
         .is_signed(1'b0),
         .result(res_mult)
     );
 
-    assign denorm_shift_amount = 7'd126 - {1'b0, shift_amount_s5};
+    assign denorm_shift_amount = 7'd126 - {1'b0, shift_amount_s4};
 
     shifter #(
         .WIDTH(128)
@@ -351,12 +377,12 @@ module divider#(
             srca_s6         <= '0;
         end else begin
             q_abs_s6        <= q_abs;
-            abs_srca_s6     <= abs_srca_s5;
-            abs_srcb_s6     <= abs_srcb_s5;
-            quotient_neg_s6 <= quotient_neg_s5;
-            srca_neg_s6     <= srca_neg_s5;
-            div_zero_s6     <= div_zero_s5;
-            srca_s6         <= srca_s5;
+            abs_srca_s6     <= abs_srca_s4;
+            abs_srcb_s6     <= abs_srcb_s4;
+            quotient_neg_s6 <= quotient_neg_s4;
+            srca_neg_s6     <= srca_neg_s4;
+            div_zero_s6     <= div_zero_s4;
+            srca_s6         <= srca_s4;
         end
     end
 
