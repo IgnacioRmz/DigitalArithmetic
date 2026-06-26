@@ -17,3 +17,6 @@
 
 # macOS Finder metadata files
 **/.DS_Store
+
+# 
+*.bak
