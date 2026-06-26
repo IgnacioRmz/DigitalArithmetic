@@ -27,8 +27,6 @@ module divider#(
     logic [63:0] x2_out;
     logic [63:0] x3_out;
     logic [63:0] x4_out;
-    logic [63:0] x5_out;
-    logic [63:0] x6_out;
     logic [63:0] one_over_b;
     logic [127:0] one_over_b_wide;
     logic [6:0]  denorm_shift_amount;
@@ -95,7 +93,6 @@ module divider#(
     logic         div_zero_s5;
     logic [63:0]  srca_s5;
 
-    // S0 pipeline register (cuts abs+lzc+shift+lut combinational path)
     logic [63:0]  abs_srca_s0;
     logic [63:0]  abs_srcb_s0;
     logic [63:0]  srca_s0;
@@ -176,7 +173,6 @@ module divider#(
         .Xn(x4_next)
     );
 
-    // S0: Front-end register stage
     always_ff @(posedge clk) begin
         if (rst) begin
             abs_srca_s0       <= '0;
@@ -203,7 +199,6 @@ module divider#(
         end
     end
 
-    // NR iteration pipeline registers
     always_ff @(posedge clk) begin
         if (rst) begin
             x1_out <= '0;
@@ -308,10 +303,6 @@ module divider#(
         end
     end
 
-    // Four-iteration mode: keep debug taps available.
-    assign x5_out = x4_out;
-    assign x6_out = x4_out;
-
     booth_wallace_multiplier #(
         .SRC1_WIDTH(64),
         .SRC2_WIDTH(64)
@@ -337,8 +328,6 @@ module divider#(
 
     assign q_abs = one_over_b;
 
-    // Stage 5 pipeline register: cuts the two-multiplier critical path
-    // (abs_srca_s4 -> mult_quotient -> q_abs -> rem multiply -> result)
     always_ff @(posedge clk) begin
         if (rst) begin
             q_abs_s5        <= '0;
@@ -361,13 +350,10 @@ module divider#(
 
     assign rem_abs = abs_srca_s5 - (q_abs_s5 * abs_srcb_s5);
 
-
     always_comb begin
         q_abs_corr = q_abs_s5;
         rem_abs_corr = rem_abs;
 
-        // Final correction: if the remainder is still at least one divisor,
-        // increment quotient and reduce remainder once.
         if (rem_abs >= abs_srcb_s5) begin
             q_abs_corr = q_abs_s5 + 64'd1;
             rem_abs_corr = rem_abs - abs_srcb_s5;

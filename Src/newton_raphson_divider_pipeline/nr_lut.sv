@@ -3,7 +3,7 @@ module nr_lut (
     output logic [4:0] x0_out 
 );
 
-    // Since it is normalized, in_val[3] will always be 1; use in_val[2:0] for LUT address.
+    // Since it is normalized, in_val[3] will always be 1
     logic [2:0] lut_addr;
     assign lut_addr = in_val[2:0];
 

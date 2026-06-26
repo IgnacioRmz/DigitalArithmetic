@@ -9,9 +9,9 @@ module shifter #(
 
     always_comb begin
         if (direction == 0) begin
-            out = in << shift_amount; // Left shift
+            out = in << shift_amount; 
         end else begin
-            out = in >> shift_amount; // Right shift
+            out = in >> shift_amount; 
         end
     end
 

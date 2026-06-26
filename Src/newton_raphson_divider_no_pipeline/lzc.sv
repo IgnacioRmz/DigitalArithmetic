@@ -7,6 +7,7 @@ module lzc #(
 
     logic [WIDTH-1:0] temp;
     logic             found_one;
+    
     assign temp = in;
 
     always_comb begin

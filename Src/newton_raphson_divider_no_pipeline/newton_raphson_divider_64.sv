@@ -1,5 +1,5 @@
 module divider#(
-  parameter int WIDTH = 64
+  parameter int WIDTH = 64 //Just for compatibility with the testbench
 ) (
     input  logic [63:0] srca,
     input  logic [63:0] srcb,
@@ -141,8 +141,6 @@ module divider#(
         q_abs_corr = q_abs;
         rem_abs_corr = rem_abs;
 
-        // Final correction: if the remainder is still at least one divisor,
-        // increment quotient and reduce remainder once.
         if (rem_abs >= abs_srcb) begin
             q_abs_corr = q_abs + 64'd1;
             rem_abs_corr = rem_abs - abs_srcb;
